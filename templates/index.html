@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Media Mind</title>
+
+<style>
+*{box-sizing:border-box;}
+
+body{
+    font-family:"Segoe UI",Arial,sans-serif;
+    background:linear-gradient(135deg,#eef2f7,#dfe6f3);
+    margin:0;
+    padding:40px;
+    color:#333;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+h1{
+    font-weight:600;
+    margin-bottom:25px;
+}
+
+.card{
+    background:white;
+    border-radius:14px;
+    padding:25px;
+    margin-bottom:25px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+.upload-area{
+    border:2px dashed #cfd7e6;
+    padding:35px;
+    text-align:center;
+    border-radius:12px;
+    transition:0.3s;
+}
+
+.upload-area.dragover{
+    background:#f3f7ff;
+    border-color:#1a73e8;
+}
+
+button{
+    background:#1a73e8;
+    color:white;
+    border:none;
+    padding:10px 20px;
+    border-radius:8px;
+    font-size:15px;
+    cursor:pointer;
+    margin:5px;
+    transition:0.25s;
+}
+
+button:hover{
+    background:#1558b0;
+}
+
+.progress-bar{
+    width:100%;
+    background:#eee;
+    border-radius:6px;
+    overflow:hidden;
+    margin-top:15px;
+    height:10px;
+}
+
+.progress{
+    height:100%;
+    width:0%;
+    background:#1a73e8;
+}
+
+.status{
+    margin-top:12px;
+    font-size:14px;
+    color:#555;
+}
+
+.folder{
+    border:1px solid #e4e7ef;
+    border-radius:10px;
+    margin-bottom:15px;
+    overflow:hidden;
+}
+
+.folder-title{
+    padding:12px 15px;
+    background:#f6f8fc;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.subfolder{
+    padding-left:20px;
+}
+
+.subfolder-title{
+    padding:10px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+.files{
+    display:none;
+    padding-left:15px;
+}
+
+.file{
+    padding:6px 0;
+}
+
+.file a{
+    text-decoration:none;
+    color:#333;
+}
+
+.file a:hover{
+    color:#1a73e8;
+}
+
+.icon{
+    margin-right:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📂 Media Mind</h1>
+
+<!-- ---------------- UPLOAD AREA ---------------- -->
+
+<div class="card">
+
+<div id="dropArea" class="upload-area">
+
+<p><b>Drag & Drop Files or Folders</b></p>
+
+<input type="file" id="fileInput" multiple hidden>
+<input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+
+<button onclick="fileInput.click()">Select Files</button>
+<button onclick="folderInput.click()">Select Folder</button>
+
+<div class="progress-bar">
+<div id="progressBar" class="progress"></div>
+</div>
+
+<div id="status" class="status">No files selected</div>
+
+</div>
+
+<br>
+
+<button onclick="uploadFiles()">Upload & Cluster</button>
+
+</div>
+
+<!-- ---------------- SEARCH ---------------- -->
+
+<div class="card">
+
+<h2>🔎 Search Similar Files</h2>
+
+<p>Upload a query file to find similar media from clustered files.</p>
+
+<input type="file" id="queryFile">
+
+<br><br>
+
+<button onclick="runSearch()">Search</button>
+
+<div id="searchStatus" class="status"></div>
+
+</div>
+
+<!-- ---------------- CLUSTERS ---------------- -->
+
+{% if clusters %}
+<div class="card">
+
+<h2>Clusters</h2>
+
+<a href="/download_all">
+<button>⬇ Download All Clusters</button>
+</a>
+
+{% for folder, data in clusters.items() %}
+
+<div class="folder">
+
+<div class="folder-title" onclick="toggle('folder{{folder}}')">
+📁 Folder {{folder}}
+
+<a href="/download/cluster_{{folder}}" style="float:right;">
+<button style="padding:5px 10px;font-size:12px;">Download</button>
+</a>
+
+</div>
+
+<div id="folder{{folder}}" style="display:none">
+
+{% for subfolder, files in data.subfolders.items() %}
+
+<div class="subfolder">
+
+<div class="subfolder-title" onclick="toggle('sub{{folder}}_{{subfolder}}')">
+📂 Subfolder {{subfolder}}
+</div>
+
+<div id="sub{{folder}}_{{subfolder}}" class="files">
+
+{% for file in files %}
+
+<div class="file">
+<a href="/data/{{file}}" target="_blank">
+<span class="icon"></span>{{file}}
+</a>
+</div>
+
+{% endfor %}
+
+</div>
+</div>
+
+{% endfor %}
+
+</div>
+</div>
+
+{% endfor %}
+
+</div>
+{% endif %}
+
+</div>
+
+<script>
+
+const dropArea = document.getElementById("dropArea")
+const fileInput = document.getElementById("fileInput")
+const folderInput = document.getElementById("folderInput")
+const status = document.getElementById("status")
+const progressBar = document.getElementById("progressBar")
+
+let selectedFiles = []
+
+/* ---------- FILE SELECTION ---------- */
+
+fileInput.addEventListener("change", e=>{
+    addFiles(e.target.files)
+})
+
+folderInput.addEventListener("change", e=>{
+    addFiles(e.target.files)
+})
+
+function addFiles(files){
+
+    for(let f of files){
+        selectedFiles.push(f)
+    }
+
+    status.innerHTML = selectedFiles.length + " files ready"
+}
+
+/* ---------- TOGGLE FOLDERS ---------- */
+
+function toggle(id){
+
+    const el = document.getElementById(id)
+
+    if(el.style.display === "block"){
+        el.style.display = "none"
+    }else{
+        el.style.display = "block"
+    }
+
+}
+
+/* ---------- FILE ICONS ---------- */
+
+function getIcon(name){
+
+    name = name.toLowerCase()
+
+    if(name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png"))
+        return "🖼️"
+
+    if(name.endsWith(".mp4") || name.endsWith(".avi") || name.endsWith(".mov"))
+        return "🎬"
+
+    if(name.endsWith(".mp3") || name.endsWith(".wav"))
+        return "🎵"
+
+    if(name.endsWith(".txt") || name.endsWith(".pdf"))
+        return "📄"
+
+    return "📁"
+}
+
+/* ---------- UPLOAD ---------- */
+
+async function uploadFiles(){
+
+    if(selectedFiles.length === 0){
+        alert("Please select files")
+        return
+    }
+
+    status.innerHTML = "Uploading..."
+
+    for(let i=0;i<selectedFiles.length;i++){
+
+        const formData = new FormData()
+
+        formData.append(
+            "file",
+            selectedFiles[i],
+            selectedFiles[i].webkitRelativePath || selectedFiles[i].name
+        )
+
+        await fetch("/upload",{
+            method:"POST",
+            body:formData
+        })
+
+        let percent = Math.round(((i+1)/selectedFiles.length)*100)
+
+        progressBar.style.width = percent + "%"
+
+        status.innerHTML = "Uploaded " + (i+1) + " / " + selectedFiles.length
+    }
+
+    status.innerHTML = "Clustering..."
+
+    await fetch("/cluster")
+
+    status.innerHTML = "Refreshing..."
+
+    location.reload()
+}
+
+/* ---------- DRAG DROP ---------- */
+
+dropArea.addEventListener("dragover", e=>{
+    e.preventDefault()
+    dropArea.classList.add("dragover")
+})
+
+dropArea.addEventListener("dragleave", ()=>{
+    dropArea.classList.remove("dragover")
+})
+
+dropArea.addEventListener("drop", e=>{
+
+    e.preventDefault()
+
+    dropArea.classList.remove("dragover")
+
+    addFiles(e.dataTransfer.files)
+
+})
+
+/* ---------- APPLY ICONS ---------- */
+
+document.querySelectorAll(".file a").forEach(link=>{
+
+    let filename = link.textContent.trim()
+
+    let icon = getIcon(filename)
+
+    link.querySelector(".icon").textContent = icon
+
+})
+
+/* ---------- SEARCH ---------- */
+
+async function runSearch(){
+
+    const file = document.getElementById("queryFile").files[0]
+
+    if(!file){
+        alert("Please upload a query file")
+        return
+    }
+
+    const status = document.getElementById("searchStatus")
+
+    status.innerHTML = "Searching..."
+
+    const formData = new FormData()
+    formData.append("query", file)
+
+    const res = await fetch("/search",{
+        method:"POST",
+        body:formData
+    })
+
+    const html = await res.text()
+
+    document.open()
+    document.write(html)
+    document.close()
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Search Results</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    padding:40px;
+    background:#f4f6fb;
+}
+
+h2{
+    margin-bottom:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:white;
+    padding:12px;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.08);
+    text-align:center;
+}
+
+.media{
+    max-width:100%;
+    max-height:180px;
+    border-radius:6px;
+}
+
+.text-box{
+    height:160px;
+    overflow:auto;
+    background:#fafafa;
+    padding:10px;
+    border-radius:6px;
+    font-size:13px;
+    text-align:left;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>Search Results</h2>
+
+<a href="/">⬅ Back to Home</a>
+
+<br><br>
+
+<h3>Query File</h3>
+
+<div class="card">
+
+{% set ext = query.split('.')[-1].lower() %}
+
+{% if ext in ["jpg","jpeg","png"] %}
+<img src="/temp/{{query}}" class="media">
+
+{% elif ext in ["mp4","avi","mov"] %}
+<video controls class="media">
+<source src="/temp/{{query}}">
+</video>
+
+{% elif ext in ["mp3","wav"] %}
+<audio controls>
+<source src="/temp/{{query}}">
+</audio>
+
+{% elif ext in ["txt"] %}
+<iframe src="/temp/{{query}}" class="text-box"></iframe>
+
+{% else %}
+<p>{{query}}</p>
+{% endif %}
+
+<p><b>Query File</b></p>
+
+</div>
+
+<h3>Search Results</h3>
+
+<div class="grid">
+
+{% for path, score in results %}
+
+<div class="card">
+
+{% set ext = path.split('.')[-1].lower() %}
+
+<!-- IMAGE -->
+{% if ext in ["jpg","jpeg","png"] %}
+
+<img src="/data/{{path}}" class="media">
+
+<!-- VIDEO -->
+{% elif ext in ["mp4","avi","mov"] %}
+
+<video controls class="media">
+<source src="/data/{{path}}">
+</video>
+
+<!-- AUDIO -->
+{% elif ext in ["mp3","wav"] %}
+
+<audio controls>
+<source src="/data/{{path}}">
+</audio>
+
+<!-- TEXT -->
+{% elif ext in ["txt"] %}
+
+<iframe src="/data/{{path}}" class="text-box"></iframe>
+
+{% else %}
+
+<p>{{path}}</p>
+
+{% endif %}
+
+<p style="font-size:12px;color:gray;">Similarity: {{ "%.1f"|format(score)}}%</p>
+
+<br>
+
+<a href="/data/{{path}}" download>
+<button style="padding:6px 12px;font-size:12px;">
+⬇ Download
+</button>
+</a>
+
+</div>
+{% endfor %}
+
+</div>
+
+</body>
+</html>
