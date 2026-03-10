@@ -3,3 +3,5 @@
 /model/__pycache__
 /model/representation/__pycache__
 /model/similarity_engine/__pycache__
+/data
+/temp
