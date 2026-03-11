@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<h1>Media Mind</h1>
+Media Mind</h1>
 
 <p><strong>Media Mind</strong> is a multimedia similarity search and clustering system that helps organize and explore collections of media files, including images, audio, video, and text.</p>
 
@@ -91,5 +89,21 @@ Media-Mind
     </li>
 </ol>
 
-</body>
-</html>
+<hr>
+
+<h2>Notes</h2>
+<ul>
+    <li><strong>Tesseract OCR</strong> is required for <code>pytesseract</code> to work.
+        <ul>
+            <li>Download and install it from <a href="https://github.com/tesseract-ocr/tesseract" target="_blank">https://github.com/tesseract-ocr/tesseract</a></li>
+            <li>Make sure the <code>tesseract</code> executable is added to your system PATH.</li>
+        </ul>
+    </li>
+    <li><strong>NLTK</strong> may require downloading additional datasets. Run this once in Python:
+        <pre>
+import nltk
+nltk.download('punkt')
+        </pre>
+    </li>
+    <li>This project focuses on embedding-based similarity search. No other system-level dependencies are required apart from Tesseract OCR.</li>
+</ul>
